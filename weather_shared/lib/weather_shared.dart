@@ -1,5 +1,6 @@
 /// Weather Shared Library
-/// Contains all shared components for the weather application
+library;
+// Contains all shared components for the weather application
 
 // Models
 export 'models/weather.dart';

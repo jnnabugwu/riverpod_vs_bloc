@@ -12,10 +12,10 @@
 - [ ] Add any UI-related dependencies (cached_network_image, etc.)
 
 ### 2. Bloc Implementation
-- [ ] Create WeatherBloc
-  - [ ] Define WeatherState (initial, loading, loaded, error)
-  - [ ] Define WeatherEvent (fetch current, fetch forecast, change units)
-- [ ] Create SettingsBloc (we will do theme last)
+- [] Create WeatherBloc
+  - [x] Define WeatherState (initial, loading, loaded, error)
+  - [x] Define WeatherEvent (fetch current, fetch forecast, change units)
+- [ ] Create SettingsBloc (we will do theme last) (weather bloc might just handle temp change)
   - [ ] Define SettingsState (theme, temperature unit)
   - [ ] Define SettingsEvent (toggle theme, change unit)
 - [ ] Create LocationBloc
