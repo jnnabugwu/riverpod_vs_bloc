@@ -15,11 +15,11 @@ class ForecastDay {
 
   factory ForecastDay.fromJson(Map<String, dynamic> json) {
     return ForecastDay(
-      date: DateTime.parse(json['dt']),
-      tempMax: json['temp']['max'],
-      tempMin: json['temp']['min'],
-      description: json['weather'][0]['description'],
-      iconCode: json['weather'][0]['icon'],
+      date: DateTime.fromMillisecondsSinceEpoch(json['dt'] * 1000),
+      tempMax: (json['temp']['max'] as num).toDouble(),
+      tempMin: (json['temp']['min'] as num).toDouble(),
+      description: json['weather'][0]['description'] as String,
+      iconCode: json['weather'][0]['icon'] as String,
     );
   }
 }
