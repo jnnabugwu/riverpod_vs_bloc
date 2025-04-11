@@ -1,4 +1,3 @@
-import 'package:dartz/dartz.dart';
 import 'package:weather_bloc/core/usecases/usecases.dart';
 import 'package:weather_bloc/domain/repositories/weather_repo.dart';
 import 'package:weather_shared/services/temperature_utils.dart';
