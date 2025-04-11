@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:weather_bloc/core/utils/injection.dart' as di;
 import 'package:weather_bloc/presentation/bloc/location/location_bloc.dart';
 import 'package:weather_bloc/presentation/bloc/weather/weather_bloc.dart';
+import 'package:weather_shared/weather_shared.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -50,6 +51,14 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              context.read<LocationBloc>().add(GetCurrentLocation());
+            },
+          ),
+        ],
       ),
       body: BlocListener<LocationBloc, LocationState>(
         listener: (context, state) {
@@ -75,20 +84,105 @@ class _MyHomePageState extends State<MyHomePage> {
                     return Center(child: Text(weatherState.message));
                   }
                   if (weatherState is WeatherLoaded) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Location: ${state.location.cityName}',
-                            style: Theme.of(context).textTheme.headlineMedium,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Temperature: ${weatherState.weather.temperature}°C',
-                            style: Theme.of(context).textTheme.headlineSmall,
-                          ),
-                        ],
+                    final currentUnit =
+                        context.read<WeatherBloc>().weatherService.currentUnit;
+                    return SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              state.location.cityName,
+                              style: Theme.of(context).textTheme.headlineMedium
+                                  ?.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 16),
+                            WeatherIcon(
+                              iconCode: weatherState.weather.iconCode,
+                              size: 100,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              '${weatherState.weather.temperature.toStringAsFixed(1)}${currentUnit.symbol}',
+                              style: Theme.of(context).textTheme.displayLarge,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              weatherState.weather.description,
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                            const SizedBox(height: 24),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                _buildWeatherDetail(
+                                  context,
+                                  Icons.thermostat,
+                                  'Feels like',
+                                  '${weatherState.weather.feelsLike.toStringAsFixed(1)}${currentUnit.symbol}',
+                                ),
+                                _buildWeatherDetail(
+                                  context,
+                                  Icons.water_drop,
+                                  'Humidity',
+                                  '${weatherState.weather.humidity}%',
+                                ),
+                                _buildWeatherDetail(
+                                  context,
+                                  Icons.air,
+                                  'Wind',
+                                  '${weatherState.weather.windSpeed} m/s',
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'Min: ${weatherState.weather.tempMin.toStringAsFixed(1)}${currentUnit.symbol}',
+                                  style:
+                                      Theme.of(context).textTheme.titleMedium,
+                                ),
+                                const SizedBox(width: 16),
+                                Text(
+                                  'Max: ${weatherState.weather.tempMax.toStringAsFixed(1)}${currentUnit.symbol}',
+                                  style:
+                                      Theme.of(context).textTheme.titleMedium,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                final newUnit =
+                                    currentUnit == TemperatureUnit.celsius
+                                        ? TemperatureUnit.fahrenheit
+                                        : TemperatureUnit.celsius;
+                                context.read<WeatherBloc>().add(
+                                  ChangeTemperatureUnit(newUnit),
+                                );
+                              },
+                              icon: const Icon(Icons.thermostat),
+                              label: Text(
+                                'Switch to ${currentUnit == TemperatureUnit.celsius ? 'Fahrenheit' : 'Celsius'}',
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            BlocBuilder<WeatherBloc, WeatherState>(
+                              builder: (context, forecastState) {
+                                if (forecastState is WeatherForecastLoaded) {
+                                  return WeatherForecast(
+                                    forecast: forecastState.forecast,
+                                    unit: currentUnit,
+                                  );
+                                }
+                                return const SizedBox.shrink();
+                              },
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   }
@@ -100,6 +194,22 @@ class _MyHomePageState extends State<MyHomePage> {
           },
         ),
       ),
+    );
+  }
+
+  Widget _buildWeatherDetail(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String value,
+  ) {
+    return Column(
+      children: [
+        Icon(icon, size: 32),
+        const SizedBox(height: 8),
+        Text(label, style: Theme.of(context).textTheme.bodySmall),
+        Text(value, style: Theme.of(context).textTheme.bodyLarge),
+      ],
     );
   }
 }

@@ -28,5 +28,12 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSLocationUsageDescription</key>
+	<string>This app needs access to location to fetch weather data for your current location.</string>
+	<key>NSLocationTemporaryUsageDescriptionDictionary</key>
+	<dict>
+		<key>FetchWeatherData</key>
+		<string>This app needs access to location to fetch weather data for your current location.</string>
+	</dict>
 </dict>
 </plist>

@@ -55,8 +55,6 @@ Future<void> init() async {
 
   // External
   getIt.registerLazySingleton(
-    () => WeatherService(
-      apiKey: const String.fromEnvironment('OPENWEATHER_API_KEY'),
-    ),
+    () => WeatherService(apiKey: ApiConfig.openWeatherApiKey),
   );
 }

@@ -1,16 +1,21 @@
 import 'package:dartz/dartz.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:weather_bloc/core/error/failures.dart';
-import 'package:weather_bloc/domain/repositories/location_repo.dart';
+import 'package:geocoding/geocoding.dart' as geo;
 import 'package:weather_shared/weather_shared.dart';
+import '../../core/error/failures.dart';
+import '../../domain/repositories/location_repo.dart';
 
 class LocationRepositoryImpl implements LocationRepository {
-  Location? _currentLocation;
-
   @override
-  ResultFuture<Location> getCurrentLocation() async {
+  Future<Either<Failure, Location>> getCurrentLocation() async {
     try {
-      // Check location permission
+      // Check if location services are enabled
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        return Left(LocationFailure(message: 'Location services are disabled'));
+      }
+
+      // Check for location permission
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
@@ -24,7 +29,8 @@ class LocationRepositoryImpl implements LocationRepository {
       if (permission == LocationPermission.deniedForever) {
         return Left(
           LocationFailure(
-            message: 'Location permissions are permanently denied',
+            message:
+                'Location permissions are permanently denied, we cannot request permissions.',
           ),
         );
       }
@@ -32,28 +38,56 @@ class LocationRepositoryImpl implements LocationRepository {
       // Get current position
       final position = await Geolocator.getCurrentPosition();
 
-      // Create location object
-      final location = Location(
-        cityName:
-            'Current Location', // We'll update this with reverse geocoding if needed
-        lat: position.latitude,
-        lon: position.longitude,
+      // Get placemark from coordinates
+      final placemarks = await geo.placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
       );
 
-      _currentLocation = location;
-      return Right(location);
+      if (placemarks.isEmpty) {
+        return Left(
+          LocationFailure(message: 'Could not determine location name'),
+        );
+      }
+
+      return Right(
+        Location(
+          cityName: placemarks.first.locality ?? 'Unknown Location',
+          lat: position.latitude,
+          lon: position.longitude,
+        ),
+      );
     } catch (e) {
       return Left(LocationFailure(message: 'Failed to get location: $e'));
     }
   }
 
   @override
-  ResultFuture<Location> setLocation(Location location) async {
+  Future<Either<Failure, Location>> setLocation(Location location) async {
     try {
-      _currentLocation = location;
       return Right(location);
     } catch (e) {
       return Left(LocationFailure(message: 'Failed to set location: $e'));
     }
   }
+
+  @override
+  Future<List<geo.Placemark>> placemarkFromCoordinates(
+    double latitude,
+    double longitude,
+  ) async {
+    try {
+      return await geo.placemarkFromCoordinates(latitude, longitude);
+    } catch (e) {
+      throw LocationException('Failed to get placemark from coordinates: $e');
+    }
+  }
+}
+
+class LocationException implements Exception {
+  final String message;
+  LocationException(this.message);
+
+  @override
+  String toString() => message;
 }

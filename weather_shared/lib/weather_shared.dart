@@ -11,5 +11,12 @@ export 'models/location.dart';
 export 'services/weather_service.dart';
 export 'services/temperature_utils.dart';
 
+// Config
+export 'core/config/api_config.dart';
+
+// Widgets
+export 'widgets/weather_icon.dart';
+export 'widgets/weather_forecast.dart';
+
 // Re-export commonly used types
 export 'package:http/http.dart' show Response;

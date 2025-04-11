@@ -11,6 +11,8 @@ class WeatherService {
   TemperatureUnit _unit;
   final http.Client _client;
 
+  TemperatureUnit get currentUnit => _unit;
+
   WeatherService({
     required this.apiKey,
     TemperatureUnit unit = TemperatureUnit.celsius,
