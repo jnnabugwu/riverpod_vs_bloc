@@ -1,13 +1,12 @@
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
 import 'package:weather_shared/weather_shared.dart';
+import 'package:dio/dio.dart' as dio;
 
 void main() {
   group('WeatherService', () {
     late WeatherService weatherService;
-    late MockClient mockClient;
+    late dio.Dio dioClient;
     final testLocation = Location(
       cityName: 'London',
       lat: 51.5074,
@@ -15,76 +14,83 @@ void main() {
     );
 
     setUp(() {
-      // Create a mock client that returns successful responses
-      mockClient = MockClient((request) async {
-        final uri = request.url;
+      dioClient = dio.Dio();
+      dioClient.interceptors.add(
+        dio.InterceptorsWrapper(
+          onRequest: (options, handler) async {
+            final uri = options.uri;
+            final isMetric = uri.queryParameters['units'] == 'metric';
+            final isImperial = uri.queryParameters['units'] == 'imperial';
+            final temp = isMetric ? 20.0 : (isImperial ? 68.0 : 293.15);
+            final feelsLike = isMetric ? 19.0 : (isImperial ? 66.2 : 292.15);
+            final tempMin = isMetric ? 18.0 : (isImperial ? 64.4 : 291.15);
+            final tempMax = isMetric ? 22.0 : (isImperial ? 71.6 : 295.15);
 
-        // Check if the request includes units parameter
-        final isMetric = uri.queryParameters['units'] == 'metric';
-        final isImperial = uri.queryParameters['units'] == 'imperial';
-
-        // Adjust temperature based on requested units
-        final temp = isMetric ? 20.0 : (isImperial ? 68.0 : 293.15);
-        final feelsLike = isMetric ? 19.0 : (isImperial ? 66.2 : 292.15);
-        final tempMin = isMetric ? 18.0 : (isImperial ? 64.4 : 291.15);
-        final tempMax = isMetric ? 22.0 : (isImperial ? 71.6 : 295.15);
-
-        if (uri.path.contains('weather')) {
-          return http.Response(
-            json.encode({
-              "weather": [
-                {"description": "clear sky", "icon": "01d"},
-              ],
-              "main": {
-                "temp": temp,
-                "feels_like": feelsLike,
-                "temp_min": tempMin,
-                "temp_max": tempMax,
-                "humidity": 70,
-              },
-              "wind": {"speed": 3.5},
-            }),
-            200,
-          );
-        }
-
-        if (uri.path.contains('forecast')) {
-          return http.Response(
-            json.encode({
-              "list": [
-                {
-                  "dt": 1710892800, // Unix timestamp for a date
-                  "temp": {
-                    "min": isMetric ? 18.0 : (isImperial ? 64.4 : 291.15),
-                    "max": isMetric ? 25.0 : (isImperial ? 77.0 : 298.15),
+            if (uri.path.contains('weather')) {
+              return handler.resolve(
+                dio.Response(
+                  requestOptions: options,
+                  data: {
+                    "weather": [
+                      {"description": "clear sky", "icon": "01d"},
+                    ],
+                    "main": {
+                      "temp": temp,
+                      "feels_like": feelsLike,
+                      "temp_min": tempMin,
+                      "temp_max": tempMax,
+                      "humidity": 70,
+                    },
+                    "wind": {"speed": 3.5},
                   },
-                  "weather": [
-                    {"description": "sunny", "icon": "01d"},
+                ),
+              );
+            }
+
+            if (uri.path.contains('forecast')) {
+              return handler.resolve(
+                dio.Response(
+                  requestOptions: options,
+                  data: {
+                    "list": [
+                      {
+                        "dt": 1710892800,
+                        "temp": {
+                          "min": isMetric ? 18.0 : (isImperial ? 64.4 : 291.15),
+                          "max": isMetric ? 25.0 : (isImperial ? 77.0 : 298.15),
+                        },
+                        "weather": [
+                          {"description": "sunny", "icon": "01d"},
+                        ],
+                      },
+                    ],
+                  },
+                ),
+              );
+            }
+
+            if (uri.path.contains('direct')) {
+              return handler.resolve(
+                dio.Response(
+                  requestOptions: options,
+                  data: [
+                    {"name": "London", "lat": 51.5074, "lon": -0.1278},
                   ],
-                },
-              ],
-            }),
-            200,
-          );
-        }
+                ),
+              );
+            }
 
-        if (uri.path.contains('direct')) {
-          return http.Response(
-            json.encode([
-              {"name": "London", "lat": 51.5074, "lon": -0.1278},
-            ]),
-            200,
-          );
-        }
+            return handler.reject(
+              dio.DioException(requestOptions: options, error: 'Not found'),
+            );
+          },
+        ),
+      );
 
-        return http.Response('Not found', 404);
-      });
-
-      // Initialize the service with the mock client
       weatherService = WeatherService(
         apiKey: 'test-api-key',
         unit: TemperatureUnit.celsius,
-        client: mockClient,
+        dio: dioClient,
       );
     });
 
@@ -98,7 +104,10 @@ void main() {
     });
 
     test('getForecast returns forecast data', () async {
-      final forecast = await weatherService.getForecast(testLocation);
+      final forecast = await weatherService.getForecast(
+        testLocation.lat,
+        testLocation.lon,
+      );
 
       expect(forecast, isNotNull);
       expect(forecast.length, equals(1));
@@ -119,15 +128,21 @@ void main() {
     });
 
     test('handles API errors appropriately', () async {
-      // Create a service with a client that always returns errors
-      final errorClient = MockClient((_) async {
-        return http.Response('Server error', 500);
-      });
+      final errorDio = dio.Dio();
+      errorDio.interceptors.add(
+        dio.InterceptorsWrapper(
+          onRequest: (options, handler) async {
+            return handler.reject(
+              dio.DioException(requestOptions: options, error: 'Server error'),
+            );
+          },
+        ),
+      );
 
       final errorService = WeatherService(
         apiKey: 'test-api-key',
         unit: TemperatureUnit.celsius,
-        client: errorClient,
+        dio: errorDio,
       );
 
       expect(
@@ -137,11 +152,10 @@ void main() {
     });
 
     test('temperature unit conversion works correctly', () async {
-      // Test with Fahrenheit
       final fahrenheitService = WeatherService(
         apiKey: 'test-api-key',
         unit: TemperatureUnit.fahrenheit,
-        client: mockClient,
+        dio: dioClient,
       );
 
       final weather = await fahrenheitService.getCurrentWeather(testLocation);

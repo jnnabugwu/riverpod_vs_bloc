@@ -11,6 +11,7 @@ import 'package:weather_bloc/domain/usecases/set_location_usecase.dart';
 import 'package:weather_bloc/presentation/bloc/location/location_bloc.dart';
 import 'package:weather_bloc/presentation/bloc/weather/weather_bloc.dart';
 import 'package:weather_shared/weather_shared.dart';
+import 'package:dio/dio.dart';
 
 final getIt = GetIt.instance;
 
@@ -55,6 +56,6 @@ Future<void> init() async {
 
   // External
   getIt.registerLazySingleton(
-    () => WeatherService(apiKey: ApiConfig.openWeatherApiKey),
+    () => WeatherService(apiKey: ApiConfig.openWeatherApiKey, dio: Dio()),
   );
 }

@@ -1,5 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
 import 'package:weather_shared/weather_shared.dart';
 import 'package:weather_bloc/domain/usecases/change_units_usecase.dart';
 import 'package:weather_bloc/domain/usecases/fetch_forecast_usecase.dart';
@@ -42,22 +43,25 @@ class WeatherBloc extends Bloc<WeatherEvent, WeatherState> {
   ) async {
     emit(WeatherLoading());
     final result = await _fetchWeatherUsecase(event.location);
-    result.fold(
-      (failure) => emit(WeatherError(failure.message)),
-      (weather) => emit(WeatherLoaded(weather: weather)),
-    );
+    result.fold((failure) => emit(WeatherError(failure.message)), (weather) {
+      final currentForecast =
+          (state is WeatherLoaded) ? (state as WeatherLoaded).forecast : null;
+      emit(WeatherLoaded(weather: weather, forecast: currentForecast));
+    });
   }
 
   Future<void> _onFetchForecast(
     FetchForecastEvent event,
     Emitter<WeatherState> emit,
   ) async {
-    emit(WeatherLoading());
     final result = await _fetchForecastUsecase(event.location);
-    result.fold(
-      (failure) => emit(WeatherError(failure.message)),
-      (forecast) => emit(WeatherForecastLoaded(forecast: forecast)),
-    );
+    result.fold((failure) => emit(WeatherError(failure.message)), (forecast) {
+      if (state is WeatherLoaded) {
+        debugPrint('forecast: ${forecast.length.toString()}');
+        final currentState = state as WeatherLoaded;
+        emit(currentState.copyWith(forecast: forecast));
+      }
+    });
   }
 
   Future<void> _onChangeUnits(

@@ -18,27 +18,27 @@
 - [ ] Create SettingsBloc (we will do theme last) (weather bloc might just handle temp change)
   - [ ] Define SettingsState (theme, temperature unit)
   - [ ] Define SettingsEvent (toggle theme, change unit)
-- [ ] Create LocationBloc
-  - [ ] Define LocationState (current location, search results)
-  - [ ] Define LocationEvent (get current, set location)
+- [x] Create LocationBloc
+  - [x] Define LocationState (current location, search results)
+  - [x] Define LocationEvent (get current, set location)
 
 ### 3. UI Implementation
 - [ ] Create app theme configuration
-- [ ] Implement main screen layout
-- [ ] Create reusable UI components:
-  - [ ] Weather card widget
-  - [ ] Forecast list widget
+- [x] Implement main screen layout
+- [x] Create reusable UI components:
+  - [x] Weather card widget
+  - [x] Forecast list widget
   - [ ] Location search widget
   - [ ] Settings panel widget
 - [ ] Implement error handling UI
-- [ ] Add loading indicators
+- [x] Add loading indicators
 
 ### 4. Features Implementation
-- [ ] Current Weather Display
-  - [ ] Temperature display
-  - [ ] Weather conditions
-  - [ ] Weather icon
-  - [ ] Additional weather data (humidity, wind)
+- [x] Current Weather Display
+  - [x] Temperature display
+  - [x] Weather conditions
+  - [x] Weather icon
+  - [x] Additional weather data (humidity, wind)
 - [ ] 5-Day Forecast
   - [ ] Daily forecast cards
   - [ ] Temperature high/low

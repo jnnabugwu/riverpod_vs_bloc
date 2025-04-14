@@ -4,6 +4,7 @@ import 'package:weather_bloc/core/utils/injection.dart' as di;
 import 'package:weather_bloc/presentation/bloc/location/location_bloc.dart';
 import 'package:weather_bloc/presentation/bloc/weather/weather_bloc.dart';
 import 'package:weather_shared/weather_shared.dart';
+import 'package:weather_bloc/presentation/pages/forecast_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,6 +53,15 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.calendar_today),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ForecastPage()),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
@@ -170,17 +180,11 @@ class _MyHomePageState extends State<MyHomePage> {
                               ),
                             ),
                             const SizedBox(height: 24),
-                            BlocBuilder<WeatherBloc, WeatherState>(
-                              builder: (context, forecastState) {
-                                if (forecastState is WeatherForecastLoaded) {
-                                  return WeatherForecast(
-                                    forecast: forecastState.forecast,
-                                    unit: currentUnit,
-                                  );
-                                }
-                                return const SizedBox.shrink();
-                              },
-                            ),
+                            if (weatherState.forecast != null)
+                              WeatherForecast(
+                                forecast: weatherState.forecast!,
+                                unit: currentUnit,
+                              ),
                           ],
                         ),
                       ),

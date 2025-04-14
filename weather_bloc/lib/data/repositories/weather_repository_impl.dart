@@ -25,7 +25,10 @@ class WeatherRepositoryImpl implements WeatherRepository {
   @override
   ResultFuture<List<ForecastDay>> getForecast(Location location) async {
     try {
-      final forecast = await _weatherService.getForecast(location);
+      final forecast = await _weatherService.getForecast(
+        location.lat,
+        location.lon,
+      );
       return Right(forecast);
     } on WeatherException catch (e) {
       return Left(WeatherFailure.fromException(e));

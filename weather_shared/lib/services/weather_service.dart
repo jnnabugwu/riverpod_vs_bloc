@@ -4,12 +4,14 @@ import '../models/weather.dart';
 import '../models/forecast.dart';
 import '../models/location.dart';
 import 'temperature_utils.dart';
+import 'package:dio/dio.dart';
 
 class WeatherService {
   final String apiKey;
   final String baseUrl = 'https://api.openweathermap.org/data/2.5';
   TemperatureUnit _unit;
   final http.Client _client;
+  final Dio _dio;
 
   TemperatureUnit get currentUnit => _unit;
 
@@ -17,8 +19,12 @@ class WeatherService {
     required this.apiKey,
     TemperatureUnit unit = TemperatureUnit.celsius,
     http.Client? client,
+    required Dio dio,
   }) : _unit = unit,
-       _client = client ?? http.Client();
+       _client = client ?? http.Client(),
+       _dio = dio {
+    _dio.options.baseUrl = baseUrl;
+  }
 
   /// Changes the temperature unit for future API calls
   void setTemperatureUnit(TemperatureUnit unit) {
@@ -50,32 +56,59 @@ class WeatherService {
     }
   }
 
-  Future<List<ForecastDay>> getForecast(Location location) async {
-    final unitParam = _unit.apiParameter;
-    final url =
-        '$baseUrl/forecast/daily?lat=${location.lat}&lon=${location.lon}&appid=$apiKey${unitParam.isNotEmpty ? '&units=$unitParam' : ''}&cnt=5';
+  Future<List<ForecastDay>> getForecast(double lat, double lon) async {
+    final response = await _dio.get(
+      '/forecast',
+      queryParameters: {
+        'lat': lat,
+        'lon': lon,
+        'appid': apiKey,
+        'units': _unit == TemperatureUnit.celsius ? 'metric' : 'imperial',
+      },
+    );
 
-    try {
-      final response = await _client.get(Uri.parse(url));
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (_unit != TemperatureUnit.kelvin && unitParam.isEmpty) {
-          for (var day in data['list']) {
-            _convertJsonTemperatures(day, TemperatureUnit.kelvin, _unit);
-          }
-        }
-        return (data['list'] as List)
-            .map((day) => ForecastDay.fromJson(day))
-            .toList();
-      } else {
-        throw WeatherException(
-          'Failed to fetch forecast data: ${response.statusCode}',
-        );
-      }
-    } catch (e) {
-      throw WeatherException('Error fetching forecast data: $e');
+    if (response.statusCode != 200) {
+      throw Exception('Failed to fetch forecast');
     }
+
+    final List<dynamic> list = response.data['list'];
+
+    // Group forecasts by day
+    final Map<String, List<Map<String, dynamic>>> groupedForecasts = {};
+
+    for (var item in list) {
+      final date = DateTime.fromMillisecondsSinceEpoch(item['dt'] * 1000);
+      final dayKey = '${date.year}-${date.month}-${date.day}';
+
+      if (!groupedForecasts.containsKey(dayKey)) {
+        groupedForecasts[dayKey] = [];
+      }
+      groupedForecasts[dayKey]!.add(item);
+    }
+
+    // For each day, select the forecast closest to noon
+    final List<ForecastDay> forecasts =
+        groupedForecasts.values
+            .map((dayForecasts) {
+              return dayForecasts
+                  .map(
+                    (f) => MapEntry(
+                      DateTime.fromMillisecondsSinceEpoch(f['dt'] * 1000),
+                      f,
+                    ),
+                  )
+                  .reduce((a, b) {
+                    final aNoon = (a.key.hour - 12).abs();
+                    final bNoon = (b.key.hour - 12).abs();
+                    return aNoon < bNoon ? a : b;
+                  })
+                  .value;
+            })
+            .map((json) => ForecastDay.fromJson(json))
+            .take(5)
+            .toList();
+
+    return forecasts;
   }
 
   /// Converts temperature values in a JSON object from one unit to another
