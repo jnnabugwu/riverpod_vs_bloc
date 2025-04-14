@@ -13,14 +13,7 @@ class ForecastPage extends StatelessWidget {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text('5-Day Forecast'),
       ),
-      body: BlocConsumer<WeatherBloc, WeatherState>(
-        listener: (context, state) {
-          if (state is WeatherLoaded) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.forecast!.length.toString())),
-            );
-          }
-        },
+      body: BlocBuilder<WeatherBloc, WeatherState>(
         builder: (context, state) {
           if (state is WeatherLoaded && state.forecast != null) {
             debugPrint(state.forecast!.length.toString());

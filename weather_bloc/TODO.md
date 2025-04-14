@@ -39,20 +39,20 @@
   - [x] Weather conditions
   - [x] Weather icon
   - [x] Additional weather data (humidity, wind)
-- [ ] 5-Day Forecast
-  - [ ] Daily forecast cards
-  - [ ] Temperature high/low
-  - [ ] Weather icons
+- [x] 5-Day Forecast
+  - [x] Daily forecast cards
+  - [x] Temperature high/low
+  - [x] Weather icons
 - [ ] Location Management
   - [ ] Location search functionality
   - [ ] Current location detection
   - [ ] Favorite locations feature
 - [ ] Settings
-  - [ ] Temperature unit toggle (°C/°F)
+  - [x] Temperature unit toggle (°C/°F)
   - [ ] Theme switching (light/dark)
 
 ### 5. Testing
-- [ ] Unit tests for blocs
+- [x] Unit tests for blocs
 - [ ] Widget tests for UI components
 - [ ] Integration tests for main features
 
