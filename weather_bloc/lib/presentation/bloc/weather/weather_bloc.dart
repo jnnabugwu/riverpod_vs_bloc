@@ -5,7 +5,6 @@ import 'package:weather_shared/weather_shared.dart';
 import 'package:weather_bloc/domain/usecases/change_units_usecase.dart';
 import 'package:weather_bloc/domain/usecases/fetch_forecast_usecase.dart';
 import 'package:weather_bloc/domain/usecases/fetch_weather_usecase.dart';
-import 'package:weather_bloc/presentation/bloc/location/location_bloc.dart';
 
 part 'weather_event.dart';
 part 'weather_state.dart';

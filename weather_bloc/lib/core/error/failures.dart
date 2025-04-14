@@ -7,8 +7,6 @@ abstract class Failure extends Equatable {
   final String message;
   final dynamic statusCode;
 
-  bool get _isValidStatusCode => statusCode is String || statusCode is int;
-
   String get errorMessage =>
       '$statusCode${statusCode is String ? '' : ' Error'}: $message';
 

@@ -70,18 +70,6 @@ class LocationRepositoryImpl implements LocationRepository {
       return Left(LocationFailure(message: 'Failed to set location: $e'));
     }
   }
-
-  @override
-  Future<List<geo.Placemark>> placemarkFromCoordinates(
-    double latitude,
-    double longitude,
-  ) async {
-    try {
-      return await geo.placemarkFromCoordinates(latitude, longitude);
-    } catch (e) {
-      throw LocationException('Failed to get placemark from coordinates: $e');
-    }
-  }
 }
 
 class LocationException implements Exception {
