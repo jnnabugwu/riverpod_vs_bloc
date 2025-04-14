@@ -16,7 +16,6 @@ class ForecastPage extends StatelessWidget {
       body: BlocBuilder<WeatherBloc, WeatherState>(
         builder: (context, state) {
           if (state is WeatherLoaded && state.forecast != null) {
-            debugPrint(state.forecast!.length.toString());
             final currentUnit =
                 context.read<WeatherBloc>().weatherService.currentUnit;
             return ListView.builder(
