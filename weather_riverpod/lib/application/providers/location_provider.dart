@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:weather_riverpod/application/providers/service_providers.dart';
 import 'package:weather_riverpod/data/repositories/location_repo_impl.dart';
 import 'package:weather_shared/weather_shared.dart';
 
@@ -13,7 +14,7 @@ class LocationNotifier extends AsyncNotifier<Location?> {
 
   @override
   Future<Location?> build() async {
-    _repository = LocationRepositoryImpl();
+    _repository = LocationRepositoryImpl(ref.watch(locationServiceProvider));
 
     // Get the current location of the device
     final result = await _repository.getCurrentLocation();

@@ -9,6 +9,7 @@ export 'models/location.dart';
 
 // Services
 export 'services/weather_service.dart';
+export 'services/location_service.dart';
 export 'services/temperature_utils.dart';
 
 // Config

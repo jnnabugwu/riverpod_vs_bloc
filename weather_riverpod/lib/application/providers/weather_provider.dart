@@ -1,8 +1,8 @@
-import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:weather_riverpod/application/providers/location_provider.dart';
+import 'package:weather_riverpod/application/providers/service_providers.dart';
 import 'package:weather_riverpod/data/repositories/weather_repo_impl.dart';
 import 'package:weather_shared/weather_shared.dart';
-import 'location_provider.dart';
 
 /// A class that holds both current weather and forecast data.
 class WeatherData {
@@ -27,9 +27,7 @@ class WeatherNotifier extends AsyncNotifier<WeatherData?> {
 
   @override
   Future<WeatherData?> build() async {
-    _repository = WeatherRepositoryImpl(
-      WeatherService(apiKey: ApiConfig.openWeatherApiKey, dio: Dio()),
-    );
+    _repository = WeatherRepositoryImpl(ref.watch(weatherServiceProvider));
 
     // Get the current location from the locationProvider
     final location = await ref.watch(locationProvider.future);
