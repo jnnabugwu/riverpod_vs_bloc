@@ -27,7 +27,7 @@ void main() {
   final tLocation = Location(cityName: 'Test City', lat: 1.0, lon: 1.0);
 
   test('initial state should be AsyncLoading', () {
-    expect(container.read(locationProvider), isA<AsyncLoading>());
+    expect(container.read(locationProvider), isA<AsyncLoading<Location?>>());
   });
 
   group('getCurrentLocation', () {
@@ -41,7 +41,8 @@ void main() {
 
       expect(
         container.read(locationProvider),
-        isA<AsyncData>().having((state) => state.value, 'value', tLocation),
+        isA<AsyncData<Location?>>()
+            .having((state) => state.value, 'value', tLocation),
       );
     });
 
@@ -55,7 +56,7 @@ void main() {
 
       expect(
         container.read(locationProvider),
-        isA<AsyncError>().having(
+        isA<AsyncError<Location?>>().having(
           (state) => state.error,
           'error',
           isA<Exception>().having(
@@ -79,7 +80,8 @@ void main() {
 
       expect(
         container.read(locationProvider),
-        isA<AsyncData>().having((state) => state.value, 'value', tLocation),
+        isA<AsyncData<Location?>>()
+            .having((state) => state.value, 'value', tLocation),
       );
     });
 
@@ -95,7 +97,7 @@ void main() {
 
         expect(
           container.read(locationProvider),
-          isA<AsyncError>().having(
+          isA<AsyncError<Location?>>().having(
             (state) => state.error,
             'error',
             isA<Exception>().having(
