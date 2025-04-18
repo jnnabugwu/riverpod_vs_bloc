@@ -14,8 +14,13 @@ class LocationNotifier extends AsyncNotifier<Location?> {
   @override
   Future<Location?> build() async {
     _repository = LocationRepositoryImpl();
-    // Initial state is null
-    return null;
+
+    // Get the current location of the device
+    final result = await _repository.getCurrentLocation();
+    return result.fold(
+      (failure) => throw Exception(failure.message),
+      (location) => location,
+    );
   }
 
   /// Gets the current device location.

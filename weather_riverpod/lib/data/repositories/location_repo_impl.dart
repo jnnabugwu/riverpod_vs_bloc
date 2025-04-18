@@ -15,41 +15,58 @@ class LocationRepositoryImpl extends LocationRepository {
   /// This is the implementation of the getCurrentLocation method.
   ResultFuture<Location> getCurrentLocation() async {
     try {
+      // Check if location services are enabled
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         return const Left(
-          LocationFailure(message: 'Location service is disabled'),
+          LocationFailure(message: 'Location services are disabled'),
         );
       }
 
-      final permission = await Geolocator.checkPermission();
+      // Check for location permission
+      LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
-        return const Left(
-          LocationFailure(message: 'Location permission is denied'),
-        );
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          return const Left(
+            LocationFailure(message: 'Location permissions are denied'),
+          );
+        }
       }
 
       if (permission == LocationPermission.deniedForever) {
         return const Left(
-          LocationFailure(message: 'Location permission is denied forever'),
+          LocationFailure(
+            message:
+                'Location permissions are permanently denied, we cannot request permissions.',
+          ),
         );
       }
 
+      // Get current position
       final position = await Geolocator.getCurrentPosition();
-      final placemark = await geo.placemarkFromCoordinates(
+
+      // Get placemark from coordinates
+      final placemarks = await geo.placemarkFromCoordinates(
         position.latitude,
         position.longitude,
       );
-      final location = Location(
-        lat: position.latitude,
-        lon: position.longitude,
-        cityName: placemark.first.locality ?? 'Unknown Location',
+
+      if (placemarks.isEmpty) {
+        return const Left(
+          LocationFailure(message: 'Could not determine location name'),
+        );
+      }
+
+      return Right(
+        Location(
+          cityName: placemarks.first.locality ?? 'Unknown Location',
+          lat: position.latitude,
+          lon: position.longitude,
+        ),
       );
-      return Right(location);
     } catch (e) {
-      return const Left(
-        LocationFailure(message: 'Failed to get current location'),
-      );
+      return Left(LocationFailure(message: 'Failed to get location: $e'));
     }
   }
 
@@ -58,7 +75,7 @@ class LocationRepositoryImpl extends LocationRepository {
     try {
       return Right(location);
     } catch (e) {
-      return const Left(LocationFailure(message: 'Failed to set location'));
+      return Left(LocationFailure(message: 'Failed to set location: $e'));
     }
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:weather_shared/weather_shared.dart';
 import 'package:weather_riverpod/application/providers/weather_provider.dart';
+import 'package:weather_shared/weather_shared.dart';
 
 /// A page that displays a 5-day weather forecast.
 class ForecastPage extends ConsumerWidget {
@@ -17,17 +17,17 @@ class ForecastPage extends ConsumerWidget {
         title: const Text('5-Day Forecast'),
       ),
       body: weatherState.when(
-        data: (forecast) {
-          if (forecast == null || forecast.isEmpty) {
+        data: (weatherData) {
+          if (weatherData == null || weatherData.forecast.isEmpty) {
             return const Center(child: Text('No forecast data available'));
           }
 
           final currentUnit = ref.read(weatherProvider.notifier).currentUnit;
           return ListView.builder(
             padding: const EdgeInsets.all(16),
-            itemCount: forecast.length,
+            itemCount: weatherData.forecast.length,
             itemBuilder: (context, index) {
-              final day = forecast[index];
+              final day = weatherData.forecast[index];
               return Card(
                 margin: const EdgeInsets.only(bottom: 16),
                 child: Padding(

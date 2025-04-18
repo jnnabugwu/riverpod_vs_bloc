@@ -2,8 +2,6 @@ import 'package:dartz/dartz.dart';
 import 'package:weather_riverpod/core/error/failures.dart';
 import 'package:weather_riverpod/core/utils/typedef.dart';
 import 'package:weather_riverpod/domain/repositories/weather_repo.dart';
-import 'package:weather_shared/models/weather.dart';
-import 'package:weather_shared/services/temperature_utils.dart';
 import 'package:weather_shared/weather_shared.dart';
 
 /// A repository that manages the weather data.
@@ -39,6 +37,7 @@ class WeatherRepositoryImpl extends WeatherRepository {
   @override
   void setTemperatureUnit(TemperatureUnit unit) {
     _currentUnit = unit;
+    _weatherService.setTemperatureUnit(unit);
   }
 
   @override
