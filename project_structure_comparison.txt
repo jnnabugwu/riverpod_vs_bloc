@@ -1,0 +1,54 @@
+Project Structure Comparison: weather_bloc vs weather_riverpod
+
+1. Overall Project Structure
+--------------------------------
+Both projects follow standard Flutter project structure with similar platform-specific directories:
+- android/
+- ios/
+- web/
+- windows/
+- linux/
+- macos/
+- build/
+- .dart_tool/
+
+Common configuration files:
+- pubspec.yaml
+- analysis_options.yaml
+- .gitignore
+- README.md
+- .metadata
+- .flutter-plugins
+- .flutter-plugins-dependencies
+
+2. Main Differences in `lib` Directory
+--------------------------------
+weather_bloc:
+- Uses traditional Clean Architecture structure:
+  - presentation/ (UI layer)
+  - core/ (shared utilities and constants)
+  - data/ (data sources and repositories)
+  - domain/ (business logic and entities)
+
+weather_riverpod:
+- Uses Clean Architecture with additional layer:
+  - application/ (state management layer with providers)
+  - presentation/ (UI layer)
+  - core/ (shared utilities and constants)
+  - data/ (data sources and repositories)
+  - domain/ (business logic and entities)
+
+3. Test Directory Structure
+--------------------------------
+weather_bloc:
+- presentation/ (test directory)
+- widget_test.dart (basic implementation)
+
+weather_riverpod:
+- application/ (test directory for providers)
+- widget_test.dart (more comprehensive implementation)
+
+Key Observations:
+1. The Riverpod version has an additional `application` layer that handles state management, which is a key architectural difference between the two implementations.
+2. The test structure in Riverpod is more focused on testing the application layer (providers) compared to Bloc's focus on presentation layer testing.
+3. Both maintain clean architecture principles but implement them slightly differently to accommodate their respective state management solutions. 
