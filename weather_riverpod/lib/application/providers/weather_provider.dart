@@ -1,15 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:weather_riverpod/application/providers/location_provider.dart';
 import 'package:weather_riverpod/application/providers/service_providers.dart';
-import 'package:weather_riverpod/data/repositories/weather_repo_impl.dart';
 import 'package:weather_shared/weather_shared.dart';
 
 /// A class that holds both current weather and forecast data.
 class WeatherData {
-  final Weather currentWeather;
-  final List<ForecastDay> forecast;
-
+  /// A class that holds both current weather and forecast data.
   WeatherData({required this.currentWeather, required this.forecast});
+
+  /// The current weather data.
+  final Weather currentWeather;
+
+  /// The forecast data.
+  final List<ForecastDay> forecast;
 }
 
 /// A provider that manages the weather state.
@@ -19,7 +22,6 @@ final weatherProvider = AsyncNotifierProvider<WeatherNotifier, WeatherData?>(
 
 /// A notifier that manages the weather state and temperature unit.
 class WeatherNotifier extends AsyncNotifier<WeatherData?> {
-  late final WeatherRepositoryImpl _repository;
   TemperatureUnit _currentUnit = TemperatureUnit.celsius;
 
   /// The current temperature unit (Celsius or Fahrenheit).
@@ -27,17 +29,18 @@ class WeatherNotifier extends AsyncNotifier<WeatherData?> {
 
   @override
   Future<WeatherData?> build() async {
-    _repository = WeatherRepositoryImpl(ref.watch(weatherServiceProvider));
+    // Get the repository from the provider
+    final repository = ref.watch(weatherRepositoryProvider);
 
     // Get the current location from the locationProvider
     final location = await ref.watch(locationProvider.future);
 
     // If we have a location, fetch the weather data
     if (location != null) {
-      final currentWeatherResult = await _repository.getCurrentWeather(
+      final currentWeatherResult = await repository.getCurrentWeather(
         location,
       );
-      final forecastResult = await _repository.getWeatherForecast(location);
+      final forecastResult = await repository.getWeatherForecast(location);
 
       return currentWeatherResult.fold(
         (failure) => throw Exception(failure.message),
@@ -56,10 +59,10 @@ class WeatherNotifier extends AsyncNotifier<WeatherData?> {
       lon: -0.1278,
     );
 
-    final currentWeatherResult = await _repository.getCurrentWeather(
+    final currentWeatherResult = await repository.getCurrentWeather(
       defaultLocation,
     );
-    final forecastResult = await _repository.getWeatherForecast(
+    final forecastResult = await repository.getWeatherForecast(
       defaultLocation,
     );
 
@@ -77,23 +80,30 @@ class WeatherNotifier extends AsyncNotifier<WeatherData?> {
   Future<void> fetchWeather() async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
+      // Get the repository from the provider
+      final repository = ref.watch(weatherRepositoryProvider);
+
       final location = await ref.watch(locationProvider.future);
       if (location == null) {
         throw Exception('No location available');
       }
 
-      final currentWeatherResult = await _repository.getCurrentWeather(
-        location,
-      );
-      final forecastResult = await _repository.getWeatherForecast(location);
+      final currentWeatherResult = await repository.getCurrentWeather(location);
+      final forecastResult = await repository.getWeatherForecast(location);
 
-      return currentWeatherResult.fold(
-        (failure) => throw Exception(failure.message),
-        (currentWeather) => forecastResult.fold(
-          (failure) => throw Exception(failure.message),
-          (forecast) =>
-              WeatherData(currentWeather: currentWeather, forecast: forecast),
-        ),
+      if (currentWeatherResult.isLeft()) {
+        throw Exception(currentWeatherResult.fold((l) => l.message, (r) => ''));
+      }
+
+      if (forecastResult.isLeft()) {
+        throw Exception(forecastResult.fold((l) => l.message, (r) => ''));
+      }
+
+      return WeatherData(
+        currentWeather: currentWeatherResult
+            .getOrElse(() => throw Exception('Failed to get current weather')),
+        forecast: forecastResult
+            .getOrElse(() => throw Exception('Failed to get forecast')),
       );
     });
   }
@@ -106,7 +116,9 @@ class WeatherNotifier extends AsyncNotifier<WeatherData?> {
       _currentUnit = TemperatureUnit.celsius;
     }
     print('Current unit: $_currentUnit');
-    _repository.setTemperatureUnit(_currentUnit);
+
+    // Get the repository from the provider and set the temperature unit
+    ref.read(weatherRepositoryProvider).setTemperatureUnit(_currentUnit);
 
     // Refresh the weather data with the new unit
     fetchWeather();
